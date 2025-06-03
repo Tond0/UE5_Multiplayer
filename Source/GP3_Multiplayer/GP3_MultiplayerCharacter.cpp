@@ -7,6 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
+#include "Public/Mechanics/SizeChangerComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
@@ -50,8 +51,24 @@ AGP3_MultiplayerCharacter::AGP3_MultiplayerCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+	SizeComponent = CreateDefaultSubobject<USizeChangerComponent>(TEXT("Size Changer"));
+	SizeComponent->SetIsReplicated(true);
+
+	bReplicates = true;
+
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+}
+
+bool AGP3_MultiplayerCharacter::BindToOnPowerActionPerformed(UObject* Object, FName FunctionName)
+{
+	//If this delegate is already bound, then you can't change the function is pointing to.
+	//The first function to bind will be always be the same (Security reason).
+	if (OnPowerActionPerformed.IsBound())
+		return false;
+
+	OnPowerActionPerformed.BindUFunction(Object, FunctionName);
+	return true;
 }
 
 void AGP3_MultiplayerCharacter::BeginPlay()
@@ -72,6 +89,13 @@ void AGP3_MultiplayerCharacter::BeginPlay()
 //////////////////////////////////////////////////////////////////////////
 // Input
 
+void AGP3_MultiplayerCharacter::SetPowerTargetSize_Implementation(FVector NewTargetSize)
+{
+	if (!HasAuthority()) return;
+
+	SizeComponent->TargetSize = NewTargetSize;
+}
+
 void AGP3_MultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	// Set up action bindings
@@ -86,6 +110,9 @@ void AGP3_MultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* Playe
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGP3_MultiplayerCharacter::Look);
+
+		// Power 
+		EnhancedInputComponent->BindAction(PowerAction, ETriggerEvent::Completed, this, &AGP3_MultiplayerCharacter::Server_PerfomPower);
 	}
 	else
 	{
@@ -127,4 +154,9 @@ void AGP3_MultiplayerCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
+}
+
+void AGP3_MultiplayerCharacter::Server_PerfomPower_Implementation(const FInputActionValue& Value)
+{
+	OnPowerActionPerformed.ExecuteIfBound();
 }

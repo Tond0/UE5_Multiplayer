@@ -3,6 +3,26 @@
 #include "GP3_MultiplayerGameMode.h"
 #include "GP3_MultiplayerCharacter.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Public/Mechanics/SizeChangerComponent.h"
+#include "Kismet/GameplayStatics.h"
+
+void AGP3_MultiplayerGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
+{
+	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
+
+	ACharacter* NewCharacter = NewPlayer->GetCharacter();
+	AGP3_MultiplayerCharacter* NewProjectCharacter = Cast<AGP3_MultiplayerCharacter>(NewCharacter);
+	const USizeChangerComponent* SizeChangerComponent =	NewProjectCharacter->GetSizeChangerComponent();
+
+	if (NewPlayer == UGameplayStatics::GetPlayerController(GetWorld(), 0))
+	{
+		NewProjectCharacter->SetPowerTargetSize(SizeChangerComponent->GetSmallSize());
+	}
+	else if(NewPlayer == UGameplayStatics::GetPlayerController(GetWorld(), 1))
+	{
+		NewProjectCharacter->SetPowerTargetSize(SizeChangerComponent->GetBigSize());
+	}
+}
 
 AGP3_MultiplayerGameMode::AGP3_MultiplayerGameMode()
 {

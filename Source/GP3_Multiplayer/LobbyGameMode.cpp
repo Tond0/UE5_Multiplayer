@@ -24,7 +24,7 @@ void ALobbyGameMode::StartGame()
 	}
 
 	bUseSeamlessTravel = true;
-	World->ServerTravel("/Game/ThirdPerson/Maps/ThirdPersonMap?listen");
+	World->ServerTravel("/Game/ThirdPerson/Maps/Level1?listen");
 }
 
 void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)

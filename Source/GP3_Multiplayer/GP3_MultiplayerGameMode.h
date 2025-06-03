@@ -6,13 +6,18 @@
 #include "GameFramework/GameModeBase.h"
 #include "GP3_MultiplayerGameMode.generated.h"
 
+
+
 UCLASS(minimalapi)
 class AGP3_MultiplayerGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
+
 public:
 	AGP3_MultiplayerGameMode();
+
+	void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 };
 
 

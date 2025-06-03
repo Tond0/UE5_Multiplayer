@@ -11,7 +11,15 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
+class USizeChangerComponent;
+
 struct FInputActionValue;
+
+/// <summary>
+/// We don't need this to be dynamic.
+/// </summary>
+/// <param name=""></param>
+DECLARE_DELEGATE(FOnPowerActionPerformed);
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -27,6 +35,9 @@ class AGP3_MultiplayerCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	USizeChangerComponent* SizeComponent;
 	
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -44,8 +55,19 @@ class AGP3_MultiplayerCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
+	/** Look Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* PowerAction;
+
 public:
 	AGP3_MultiplayerCharacter();
+
+
+//Delegate
+protected:
+	FOnPowerActionPerformed OnPowerActionPerformed;
+public:
+	bool BindToOnPowerActionPerformed(UObject* Owner, FName FunctionName);
 	
 
 protected:
@@ -55,7 +77,16 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
-			
+
+	UFUNCTION(Server, Reliable)
+	void Server_PerfomPower(const FInputActionValue& Value);
+	
+public:
+	UFUNCTION(BlueprintCallable)
+	const USizeChangerComponent* GetSizeChangerComponent() const { return SizeComponent; }
+
+	UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
+	void SetPowerTargetSize(FVector NewTargetSize);
 
 protected:
 	// APawn interface
