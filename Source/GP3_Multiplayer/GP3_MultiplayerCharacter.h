@@ -85,8 +85,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	const USizeChangerComponent* GetSizeChangerComponent() const { return SizeComponent; }
 
-	UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
-	void SetPowerTargetSize(FVector NewTargetSize);
+	//FIXME: Multicast o Client?
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+	void SetTargetPowerState(EPowerState NewTargetPowerState);
 
 protected:
 	// APawn interface

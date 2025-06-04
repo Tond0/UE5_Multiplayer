@@ -16,11 +16,11 @@ void AGP3_MultiplayerGameMode::HandleStartingNewPlayer_Implementation(APlayerCon
 
 	if (NewPlayer == UGameplayStatics::GetPlayerController(GetWorld(), 0))
 	{
-		NewProjectCharacter->SetPowerTargetSize(SizeChangerComponent->GetSmallSize());
+		NewProjectCharacter->SetTargetPowerState(EPowerState::Small);
 	}
 	else if(NewPlayer == UGameplayStatics::GetPlayerController(GetWorld(), 1))
 	{
-		NewProjectCharacter->SetPowerTargetSize(SizeChangerComponent->GetBigSize());
+		NewProjectCharacter->SetTargetPowerState(EPowerState::Big);
 	}
 }
 

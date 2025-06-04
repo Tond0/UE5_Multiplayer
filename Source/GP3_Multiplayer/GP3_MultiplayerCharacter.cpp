@@ -89,11 +89,11 @@ void AGP3_MultiplayerCharacter::BeginPlay()
 //////////////////////////////////////////////////////////////////////////
 // Input
 
-void AGP3_MultiplayerCharacter::SetPowerTargetSize_Implementation(FVector NewTargetSize)
+void AGP3_MultiplayerCharacter::SetTargetPowerState_Implementation(EPowerState NewTargetPowerState)
 {
 	if (!HasAuthority()) return;
 
-	SizeComponent->TargetSize = NewTargetSize;
+	SizeComponent->TargetPowerState = NewTargetPowerState;
 }
 
 void AGP3_MultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

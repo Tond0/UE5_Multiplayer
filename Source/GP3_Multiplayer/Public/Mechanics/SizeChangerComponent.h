@@ -7,6 +7,45 @@
 #include "SizeChangerComponent.generated.h"
 
 
+UENUM(BlueprintType)
+enum class EPowerState
+{
+	Standard,
+	Big,
+	Small
+};
+
+USTRUCT(BlueprintType)
+struct FStatePowerSettings
+{
+	GENERATED_BODY()
+
+public:
+
+	FStatePowerSettings() {}
+
+	FStatePowerSettings(FVector Size, float JumpZVelocity, float GravityScale, float MaxWalkSpeed)
+	{
+		this->Size = Size;
+		this->JumpZVelocity = JumpZVelocity;
+		this->GravityScale = GravityScale;
+		this->MaxWalkSpeed = MaxWalkSpeed;
+	}
+
+public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FVector Size;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float JumpZVelocity;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float GravityScale;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float MaxWalkSpeed;
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class GP3_MULTIPLAYER_API USizeChangerComponent : public UActorComponent
 {
@@ -17,48 +56,56 @@ public:
 	USizeChangerComponent();
 
 protected:
-	/// <summary>
-	/// The size the character will reach if the power-up make it small
-	/// </summary>
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BlueprintProtected))
-	FVector SmallSize;
+	FStatePowerSettings BigPowerSettings;
 
-	/// <summary>
-	/// The size the character will reach if the power-up make it big
-	/// </summary>
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BlueprintProtected))
-	FVector BigSize;
+	FStatePowerSettings SmallPowerSettings;
+	UPROPERTY(BlueprintReadOnly, meta = (BlueprintProtected))
+	FStatePowerSettings StandardPowerSettings;
 
+	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
+	void ApplyNewSettings(AActor* ActorOwner, FStatePowerSettings SettingsToApply);
+
+protected:
+	UPROPERTY(BlueprintReadOnly, meta = (BlueprintProtected))
+	class UCharacterMovementComponent* MovementComponent;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BlueprintProtected))
+	float StandardJumpZVelocity;
+
+protected:
 	/// <summary>
-	/// Is this character in its normal size or it's altering its size?
+	/// In which state is this character in?
 	/// </summary>
 	UPROPERTY(Replicated, BlueprintReadOnly, meta = (BlueprintProtected))
-	bool isAlteringSize;
+	EPowerState CurrentPowerState;
 
 public:
 	/// <summary>
-	/// The size this character will grow/shrink to.
+	/// When the action will be triggered will this character try to Grow or Shrink?
 	/// </summary>
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly)
-	FVector TargetSize;
+	UPROPERTY(BlueprintReadOnly, meta = (BlueprintProtected))
+	EPowerState TargetPowerState;
 
 //Getters
 public:
 	UFUNCTION(BlueprintCallable)
-	const bool GetIsAleteringSize() const { return isAlteringSize; }
-
-	UFUNCTION(BlueprintCallable)
-	const FVector GetSmallSize() const { return SmallSize; }
-
-	UFUNCTION(BlueprintCallable)
-	const FVector GetBigSize() const { return BigSize; }
+	const EPowerState GetPowerState() const { return CurrentPowerState; }
 
 protected:
 	/// <summary>
-	/// This will be called each time the player perform the X action.
+	/// Change the power state and adjust the character with it.
 	/// </summary>
 	UFUNCTION(NetMulticast, Reliable, BlueprintCallable, meta = (BlueprintProtected))
-	void ToggleSize();
+	void ChangePowerState(EPowerState NextPowerState);
+
+	/// <summary>
+	/// Toggle from the standard state and the target state.
+	/// Called from power action delegate.
+	/// </summary>
+	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
+	void TogglePowerState();
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
