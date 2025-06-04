@@ -8,6 +8,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
 #include "Public/Mechanics/SizeChangerComponent.h"
+#include "Public/Mechanics/InteractableBoxComponent.h"
+#include "Math/UnrealMathVectorConstants.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
@@ -113,11 +115,73 @@ void AGP3_MultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* Playe
 
 		// Power 
 		EnhancedInputComponent->BindAction(PowerAction, ETriggerEvent::Completed, this, &AGP3_MultiplayerCharacter::Server_PerfomPower);
+
+		// Interaction
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Completed, this, &AGP3_MultiplayerCharacter::Server_Interact);
 	}
 	else
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
+}
+
+void AGP3_MultiplayerCharacter::Server_Interact_Implementation(const FInputActionValue& Value)
+{
+	if (!HasAuthority()) return;
+
+	if (!Interactable) return;
+
+	Interactable->ExecuteInteract();
+}
+
+void AGP3_MultiplayerCharacter::ReplaceInteractable(UInteractableBoxComponent* NewInteractable)
+{
+	if (!NewInteractable) return;
+
+	//If there's already an interactable...
+	if (Interactable)
+	{
+		//... We decide which one to keep depending on the squared distance.
+		float InteractableSqrdDist = GetSquaredDistanceTo(Interactable->GetOwner());
+		float NewInteractableSqrdDist = GetSquaredDistanceTo(NewInteractable->GetOwner());
+		//If its closer, we choose the new one.
+		if (NewInteractableSqrdDist < InteractableSqrdDist)
+			Interactable = NewInteractable;
+	}
+	else
+		Interactable = NewInteractable;
+}
+
+void AGP3_MultiplayerCharacter::RemoveInteractable(UInteractableBoxComponent* InteractableToRemove)
+{
+	if (InteractableToRemove != Interactable) return;
+
+	//We start by setting it to nullptr
+	Interactable = nullptr;
+
+	//Check if we're already overlapping with any actor with the UInteractableBoxComponent.
+	TSet<AActor*> OverlappingInteractables;
+	GetOverlappingActors(OverlappingInteractables, UInteractableBoxComponent::StaticClass());
+
+	//The min squared distance we are looking for.
+	float MinSquaredDistance = INFINITY;
+	AActor* ClosestInteractableActor = nullptr;
+
+	//Let's check which is the closest
+	for (AActor* CurrentOverlappingInteractable : OverlappingInteractables)
+	{
+		float CurrentSquaredDistance = GetSquaredDistanceTo(CurrentOverlappingInteractable);
+
+		if (CurrentSquaredDistance < MinSquaredDistance)
+		{
+			MinSquaredDistance = CurrentSquaredDistance;
+			ClosestInteractableActor = CurrentOverlappingInteractable;
+		}
+	}
+
+	if(Interactable)
+		//Assign new closest interactable.
+		Interactable = ClosestInteractableActor->GetComponentByClass<UInteractableBoxComponent>();
 }
 
 void AGP3_MultiplayerCharacter::Move(const FInputActionValue& Value)

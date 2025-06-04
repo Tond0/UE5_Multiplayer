@@ -12,6 +12,7 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 class USizeChangerComponent;
+class UInteractableBoxComponent;
 
 struct FInputActionValue;
 
@@ -55,9 +56,13 @@ class AGP3_MultiplayerCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
-	/** Look Input Action */
+	/** Power Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* PowerAction;
+
+	/** Interact Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* InteractAction;
 
 public:
 	AGP3_MultiplayerCharacter();
@@ -69,9 +74,28 @@ protected:
 public:
 	bool BindToOnPowerActionPerformed(UObject* Owner, FName FunctionName);
 	
+//Interactable
+protected:
+	/// <summary>
+	/// The interactable we can interact with.
+	/// Self assigned from the interactable box if player is close to it.
+	/// </summary>
+	UPROPERTY(BlueprintReadOnly, meta = (BlueprintProtected))
+	UInteractableBoxComponent* Interactable;
+	UFUNCTION(Server, Reliable)
+	void Server_Interact(const FInputActionValue& Value);
+public:
+	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
+	const UInteractableBoxComponent* GetInteractable() const { return Interactable; }
+
+	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
+	void ReplaceInteractable(UInteractableBoxComponent* NewInteractable);
+
+	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
+	void RemoveInteractable(UInteractableBoxComponent* InteractableToRemove);
+
 
 protected:
-
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
 
