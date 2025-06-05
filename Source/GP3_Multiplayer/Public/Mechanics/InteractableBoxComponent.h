@@ -7,6 +7,7 @@
 #include "Interactable.h"
 #include "InteractableBoxComponent.generated.h"
 
+class UWidgetComponent;
 
 /**
  * 
@@ -22,10 +23,15 @@ public:
 
 protected:
     UPROPERTY(BlueprintReadOnly, meta = (BlueprintProtected))
-    TScriptInterface<IInteractable> InteractableOwner = nullptr;
+    TScriptInterface<IExecutable> InteractableOwner = nullptr;
+
+    UPROPERTY(BlueprintReadOnly, meta = (BlueprintProtected))
+    UWidgetComponent* InteractableWidgetComponent;
+
+    FDelegateHandle HandleOnInteractableChanged;
 public:
     UFUNCTION(BlueprintCallable, meta = (BluprintProtected))
-    const TScriptInterface<IInteractable> GetInteractable() const { return InteractableOwner; }
+    const TScriptInterface<IExecutable> GetInteractable() const { return InteractableOwner; }
 
 public:
     /// <summary>
@@ -35,7 +41,7 @@ public:
     /// </summary>
     UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
     void ExecuteInteract();
-    void ExecuteInteract_Implementation() { InteractableOwner->Interact(); }
+    void ExecuteInteract_Implementation() { InteractableOwner->Execute(); }
 
 protected:
     virtual void BeginPlay() override;
@@ -43,6 +49,9 @@ protected:
     UFUNCTION()
     void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
     UFUNCTION()
-    void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);    
+    void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+    UFUNCTION()
+    void Handle_OnInteractableChanged(TScriptInterface<IExecutable> NewInteractable);
 
 };

@@ -62,6 +62,16 @@ AGP3_MultiplayerCharacter::AGP3_MultiplayerCharacter()
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
 
+FDelegateHandle AGP3_MultiplayerCharacter::BindToOnInteractableChanged(UObject* Object, FName FunctionName)
+{
+	return OnInteractableChanged.AddUFunction(Object, FunctionName);
+}
+
+void AGP3_MultiplayerCharacter::UnbindToOnInteractableChanged(FDelegateHandle Handle)
+{
+	OnInteractableChanged.Remove(Handle);
+}
+
 bool AGP3_MultiplayerCharacter::BindToOnPowerActionPerformed(UObject* Object, FName FunctionName)
 {
 	//If this delegate is already bound, then you can't change the function is pointing to.
@@ -131,10 +141,11 @@ void AGP3_MultiplayerCharacter::Server_Interact_Implementation(const FInputActio
 
 	if (!Interactable.GetObject()) return;
 
-	Interactable->Execute_Interact(Interactable.GetObject());
+	//Lol il nome della funzione per colpa di unreal è diventato Execute_Execute
+	Interactable->Execute_Execute(Interactable.GetObject());
 }
 
-void AGP3_MultiplayerCharacter::ReplaceInteractable(TScriptInterface<IInteractable> NewInteractable)
+void AGP3_MultiplayerCharacter::ReplaceInteractable(TScriptInterface<IExecutable> NewInteractable)
 {
 	if (!NewInteractable.GetObject()) return;
 
@@ -152,7 +163,7 @@ void AGP3_MultiplayerCharacter::ReplaceInteractable(TScriptInterface<IInteractab
 		Interactable = NewInteractable;
 }
 
-void AGP3_MultiplayerCharacter::RemoveInteractable(TScriptInterface<IInteractable> InteractableToRemove)
+void AGP3_MultiplayerCharacter::RemoveInteractable(TScriptInterface<IExecutable> InteractableToRemove)
 {
 	if (InteractableToRemove.GetObject() != Interactable.GetObject()) return;
 
@@ -179,9 +190,13 @@ void AGP3_MultiplayerCharacter::RemoveInteractable(TScriptInterface<IInteractabl
 		}
 	}
 
-	if(ClosestInteractableActor)
+	if (ClosestInteractableActor)
+	{
 		//Assign new closest interactable.
 		Interactable = ClosestInteractableActor;
+		//Any Executable binded (close to player will be notified)
+		OnInteractableChanged.Broadcast(Interactable);
+	}
 }
 
 void AGP3_MultiplayerCharacter::Move(const FInputActionValue& Value)

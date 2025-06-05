@@ -10,18 +10,18 @@
  * 
  */
 UINTERFACE(MinimalAPI, Blueprintable)
-class UInteractable : public UInterface
+class UExecutable : public UInterface
 {
 	GENERATED_BODY()
 };
 
 
-class GP3_MULTIPLAYER_API IInteractable
+class GP3_MULTIPLAYER_API IExecutable
 {
     GENERATED_BODY()
 
 public:
     // Puoi chiamare questa funzione in C++ o Blueprints
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-    void Interact();
+    void Execute();
 };

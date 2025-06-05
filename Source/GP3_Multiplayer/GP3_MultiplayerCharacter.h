@@ -22,6 +22,8 @@ struct FInputActionValue;
 /// <param name=""></param>
 DECLARE_DELEGATE(FOnPowerActionPerformed);
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnInteractableChanged, TScriptInterface<IExecutable>);
+
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config=Game)
@@ -68,11 +70,19 @@ public:
 	AGP3_MultiplayerCharacter();
 
 
-//Delegate
+//Delegates
+//PowerAction
 protected:
 	FOnPowerActionPerformed OnPowerActionPerformed;
 public:
 	bool BindToOnPowerActionPerformed(UObject* Owner, FName FunctionName);
+	
+//InteractableChanged
+protected:
+	FOnInteractableChanged OnInteractableChanged;
+public:
+	FDelegateHandle BindToOnInteractableChanged(UObject* Object, FName FunctionName);
+	void UnbindToOnInteractableChanged(FDelegateHandle Handle);
 	
 //Interactable
 protected:
@@ -81,18 +91,18 @@ protected:
 	/// Self assigned from the interactable box if player is close to it.
 	/// </summary>
 	UPROPERTY(BlueprintReadOnly, meta = (BlueprintProtected))
-	TScriptInterface<IInteractable> Interactable;
+	TScriptInterface<IExecutable> Interactable;
 	UFUNCTION(Server, Reliable)
 	void Server_Interact(const FInputActionValue& Value);
 public:
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
-	const TScriptInterface<IInteractable> GetInteractable() const { return Interactable; }
+	const TScriptInterface<IExecutable> GetInteractable() const { return Interactable; }
 
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
-	void ReplaceInteractable(TScriptInterface<IInteractable> NewInteractable);
+	void ReplaceInteractable(TScriptInterface<IExecutable> NewInteractable);
 
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
-	void RemoveInteractable(TScriptInterface<IInteractable> InteractableToRemove);
+	void RemoveInteractable(TScriptInterface<IExecutable> InteractableToRemove);
 
 
 protected:
@@ -126,4 +136,3 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 };
-
