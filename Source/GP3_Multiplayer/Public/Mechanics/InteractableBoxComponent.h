@@ -4,9 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Components/BoxComponent.h"
+#include "Interactable.h"
 #include "InteractableBoxComponent.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInteracted);
 
 /**
  * 
@@ -21,18 +21,13 @@ public:
     UInteractableBoxComponent();
 
 protected:
-    UPROPERTY(BlueprintAssignable)
-    FOnInteracted OnInteracted;
+    UPROPERTY(BlueprintReadOnly, meta = (BlueprintProtected))
+    TScriptInterface<IInteractable> InteractableOwner = nullptr;
 public:
-    /// <summary>
-    /// Function to bind to OnInteracted, without giving the access to broadcast it.
-    /// </summary>
-    /// <typeparam name="UserClass"></typeparam>
-    /// <param name="Owner">The owner of the funciton</param>
-    /// <param name="Func">Usually in the form of &Class::Function</param>
-    template <typename UserClass>
-    void BindToOnInteracted(UserClass* Owner, void (UserClass::* Func)());
+    UFUNCTION(BlueprintCallable, meta = (BluprintProtected))
+    const TScriptInterface<IInteractable> GetInteractable() const { return InteractableOwner; }
 
+public:
     /// <summary>
     /// Called from the Character for start an interaction.
     /// This function will broadcast OnInteracted, ik it might sounds stupid to make it not accessible for broadcast but then 
@@ -40,7 +35,7 @@ public:
     /// </summary>
     UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
     void ExecuteInteract();
-    void ExecuteInteract_Implementation() { OnInteracted.Broadcast(); }
+    void ExecuteInteract_Implementation() { InteractableOwner->Interact(); }
 
 protected:
     virtual void BeginPlay() override;

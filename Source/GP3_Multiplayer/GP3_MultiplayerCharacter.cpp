@@ -129,21 +129,21 @@ void AGP3_MultiplayerCharacter::Server_Interact_Implementation(const FInputActio
 {
 	if (!HasAuthority()) return;
 
-	if (!Interactable) return;
+	if (!Interactable.GetObject()) return;
 
-	Interactable->ExecuteInteract();
+	Interactable->Execute_Interact(Interactable.GetObject());
 }
 
-void AGP3_MultiplayerCharacter::ReplaceInteractable(UInteractableBoxComponent* NewInteractable)
+void AGP3_MultiplayerCharacter::ReplaceInteractable(TScriptInterface<IInteractable> NewInteractable)
 {
-	if (!NewInteractable) return;
+	if (!NewInteractable.GetObject()) return;
 
 	//If there's already an interactable...
-	if (Interactable)
+	if (Interactable.GetObject())
 	{
 		//... We decide which one to keep depending on the squared distance.
-		float InteractableSqrdDist = GetSquaredDistanceTo(Interactable->GetOwner());
-		float NewInteractableSqrdDist = GetSquaredDistanceTo(NewInteractable->GetOwner());
+		float InteractableSqrdDist = GetSquaredDistanceTo(Cast<AActor>(Interactable.GetObject()));
+		float NewInteractableSqrdDist = GetSquaredDistanceTo(Cast<AActor>(NewInteractable.GetObject()));
 		//If its closer, we choose the new one.
 		if (NewInteractableSqrdDist < InteractableSqrdDist)
 			Interactable = NewInteractable;
@@ -152,9 +152,9 @@ void AGP3_MultiplayerCharacter::ReplaceInteractable(UInteractableBoxComponent* N
 		Interactable = NewInteractable;
 }
 
-void AGP3_MultiplayerCharacter::RemoveInteractable(UInteractableBoxComponent* InteractableToRemove)
+void AGP3_MultiplayerCharacter::RemoveInteractable(TScriptInterface<IInteractable> InteractableToRemove)
 {
-	if (InteractableToRemove != Interactable) return;
+	if (InteractableToRemove.GetObject() != Interactable.GetObject()) return;
 
 	//We start by setting it to nullptr
 	Interactable = nullptr;
@@ -179,9 +179,9 @@ void AGP3_MultiplayerCharacter::RemoveInteractable(UInteractableBoxComponent* In
 		}
 	}
 
-	if(Interactable)
+	if(ClosestInteractableActor)
 		//Assign new closest interactable.
-		Interactable = ClosestInteractableActor->GetComponentByClass<UInteractableBoxComponent>();
+		Interactable = ClosestInteractableActor;
 }
 
 void AGP3_MultiplayerCharacter::Move(const FInputActionValue& Value)

@@ -81,18 +81,18 @@ protected:
 	/// Self assigned from the interactable box if player is close to it.
 	/// </summary>
 	UPROPERTY(BlueprintReadOnly, meta = (BlueprintProtected))
-	UInteractableBoxComponent* Interactable;
+	TScriptInterface<IInteractable> Interactable;
 	UFUNCTION(Server, Reliable)
 	void Server_Interact(const FInputActionValue& Value);
 public:
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
-	const UInteractableBoxComponent* GetInteractable() const { return Interactable; }
+	const TScriptInterface<IInteractable> GetInteractable() const { return Interactable; }
 
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
-	void ReplaceInteractable(UInteractableBoxComponent* NewInteractable);
+	void ReplaceInteractable(TScriptInterface<IInteractable> NewInteractable);
 
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
-	void RemoveInteractable(UInteractableBoxComponent* InteractableToRemove);
+	void RemoveInteractable(TScriptInterface<IInteractable> InteractableToRemove);
 
 
 protected:

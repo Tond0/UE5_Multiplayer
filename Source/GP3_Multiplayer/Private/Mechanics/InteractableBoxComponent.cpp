@@ -3,6 +3,7 @@
 
 #include "Mechanics/InteractableBoxComponent.h"
 #include "GP3_Multiplayer/GP3_MultiplayerCharacter.h"
+#include "Mechanics/Interactable.h"
 
 UInteractableBoxComponent::UInteractableBoxComponent()
 {
@@ -16,6 +17,8 @@ void UInteractableBoxComponent::BeginPlay()
 
 	OnComponentBeginOverlap.AddUniqueDynamic(this, &UInteractableBoxComponent::OnOverlapBegin);
 	OnComponentEndOverlap.AddUniqueDynamic(this, &UInteractableBoxComponent::OnOverlapEnd);
+
+	InteractableOwner = GetOwner();
 }
 
 void UInteractableBoxComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -24,7 +27,7 @@ void UInteractableBoxComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedCo
 	AGP3_MultiplayerCharacter* CharacterOverlapping = Cast<AGP3_MultiplayerCharacter>(OtherActor);
 	if (!CharacterOverlapping) return;
 
-	CharacterOverlapping->ReplaceInteractable(this);
+	CharacterOverlapping->ReplaceInteractable(InteractableOwner);
 }
 
 void UInteractableBoxComponent::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -34,12 +37,5 @@ void UInteractableBoxComponent::OnOverlapEnd(UPrimitiveComponent* OverlappedComp
 	if (!CharacterOverlapping) return;
 
 	//Try to remove itself.
-	CharacterOverlapping->RemoveInteractable(this);
-}
-
-
-template <typename UserClass>
-void UInteractableBoxComponent::BindToOnInteracted(UserClass* Owner, void (UserClass::* FuncName)())
-{
-	OnInteracted.AddUniqueDynamic(this, FuncName);
+	CharacterOverlapping->RemoveInteractable(InteractableOwner);
 }
