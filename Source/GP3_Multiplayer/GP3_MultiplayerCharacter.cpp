@@ -145,9 +145,9 @@ void AGP3_MultiplayerCharacter::Server_Interact_Implementation(const FInputActio
 	Interactable->Execute_Execute(Interactable.GetObject());
 }
 
-void AGP3_MultiplayerCharacter::ReplaceInteractable(TScriptInterface<IExecutable> NewInteractable)
+bool AGP3_MultiplayerCharacter::TryReplaceInteractable(TScriptInterface<IExecutable> NewInteractable)
 {
-	if (!NewInteractable.GetObject()) return;
+	if (!NewInteractable.GetObject()) return false;
 
 	//If there's already an interactable...
 	if (Interactable.GetObject())
@@ -157,46 +157,59 @@ void AGP3_MultiplayerCharacter::ReplaceInteractable(TScriptInterface<IExecutable
 		float NewInteractableSqrdDist = GetSquaredDistanceTo(Cast<AActor>(NewInteractable.GetObject()));
 		//If its closer, we choose the new one.
 		if (NewInteractableSqrdDist < InteractableSqrdDist)
+		{
 			Interactable = NewInteractable;
+			OnInteractableChanged.Broadcast(this, Interactable);
+			return true;
+		}
 	}
 	else
+	{
 		Interactable = NewInteractable;
+		//FIXME: This one it's useless because if it is was nullptr then there's no other interactable fighting to be the main one for this player.
+		OnInteractableChanged.Broadcast(this, Interactable);
+		return true;
+	}
+
+	return false;
 }
 
 void AGP3_MultiplayerCharacter::RemoveInteractable(TScriptInterface<IExecutable> InteractableToRemove)
 {
 	if (InteractableToRemove.GetObject() != Interactable.GetObject()) return;
 
-	//We start by setting it to nullptr
 	Interactable = nullptr;
+	//FIXME: Old method, now every box component, but the main one, are checking every X seconds.
+	////We start by setting it to nullptr
+	//Interactable = nullptr;
 
-	//Check if we're already overlapping with any actor with the UInteractableBoxComponent.
-	TSet<AActor*> OverlappingInteractables;
-	GetOverlappingActors(OverlappingInteractables, UInteractableBoxComponent::StaticClass());
+	////Check if we're already overlapping with any actor with the UInteractableBoxComponent.
+	//TSet<AActor*> OverlappingInteractables;
+	//GetOverlappingActors(OverlappingInteractables, UInteractableBoxComponent::StaticClass());
 
-	//The min squared distance we are looking for.
-	float MinSquaredDistance = INFINITY;
-	AActor* ClosestInteractableActor = nullptr;
+	////The min squared distance we are looking for.
+	//float MinSquaredDistance = INFINITY;
+	//AActor* ClosestInteractableActor = nullptr;
 
-	//Let's check which is the closest
-	for (AActor* CurrentOverlappingInteractable : OverlappingInteractables)
-	{
-		float CurrentSquaredDistance = GetSquaredDistanceTo(CurrentOverlappingInteractable);
+	////Let's check which is the closest
+	//for (AActor* CurrentOverlappingInteractable : OverlappingInteractables)
+	//{
+	//	float CurrentSquaredDistance = GetSquaredDistanceTo(CurrentOverlappingInteractable);
 
-		if (CurrentSquaredDistance < MinSquaredDistance)
-		{
-			MinSquaredDistance = CurrentSquaredDistance;
-			ClosestInteractableActor = CurrentOverlappingInteractable;
-		}
-	}
+	//	if (CurrentSquaredDistance < MinSquaredDistance)
+	//	{
+	//		MinSquaredDistance = CurrentSquaredDistance;
+	//		ClosestInteractableActor = CurrentOverlappingInteractable;
+	//	}
+	//}
 
-	if (ClosestInteractableActor)
-	{
-		//Assign new closest interactable.
-		Interactable = ClosestInteractableActor;
-		//Any Executable binded (close to player will be notified)
-		OnInteractableChanged.Broadcast(Interactable);
-	}
+	//if (ClosestInteractableActor)
+	//{
+	//	//Assign new closest interactable.
+	//	Interactable = ClosestInteractableActor;
+	//	//Any Executable binded (close to player will be notified)
+	//	OnInteractableChanged.Broadcast(Interactable);
+	//}
 }
 
 void AGP3_MultiplayerCharacter::Move(const FInputActionValue& Value)

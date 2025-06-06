@@ -24,7 +24,8 @@ void UInteractableBoxComponent::BeginPlay()
 	USceneComponent* FirstChild = GetChildComponent(0);
 	if (FirstChild)
 	{
-		if(InteractableWidgetComponent = Cast<UWidgetComponent>(FirstChild))
+		InteractableWidgetComponent = Cast<UWidgetComponent>(FirstChild);
+		if(InteractableWidgetComponent)
 			InteractableWidgetComponent->SetVisibility(false, false);
 	}
 }
@@ -35,12 +36,15 @@ void UInteractableBoxComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedCo
 	AGP3_MultiplayerCharacter* CharacterOverlapping = Cast<AGP3_MultiplayerCharacter>(OtherActor);
 	if (!CharacterOverlapping) return;
 
-	CharacterOverlapping->ReplaceInteractable(InteractableOwner);
+	//Try to set itself as main interactable for the player
+	if (CharacterOverlapping->TryReplaceInteractable(InteractableOwner))
+		//We are the interactable the player could interact with in this moment.
+		SetAsMainInteractable();
+	else
+		//We are the interactable the player can't interact with, but it's in range.
+		SetAsSideInteractable(CharacterOverlapping);
 	
 	HandleOnInteractableChanged = CharacterOverlapping->BindToOnInteractableChanged(this, "Handle_OnInteractableChanged");
-
-	if (InteractableWidgetComponent && CharacterOverlapping->GetInteractable() == GetOwner())
-		InteractableWidgetComponent->SetVisibility(true, true);
 }
 
 void UInteractableBoxComponent::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -49,19 +53,70 @@ void UInteractableBoxComponent::OnOverlapEnd(UPrimitiveComponent* OverlappedComp
 	AGP3_MultiplayerCharacter* CharacterOverlapping = Cast<AGP3_MultiplayerCharacter>(OtherActor);
 	if (!CharacterOverlapping) return;
 
-	//Try to remove itself.
+	//Removes itself
 	CharacterOverlapping->RemoveInteractable(InteractableOwner);
+	//Player is not in range anymore.
+	SetAsSleepInteractable();
 
 	CharacterOverlapping->UnbindToOnInteractableChanged(HandleOnInteractableChanged);
-
-	if (InteractableWidgetComponent)
-		InteractableWidgetComponent->SetVisibility(false, false);
 }
 
-void UInteractableBoxComponent::Handle_OnInteractableChanged(TScriptInterface<IExecutable> NewInteractable)
+void UInteractableBoxComponent::SetAsMainInteractable()
 {
-	if (NewInteractable != GetOwner()) return;
+	//Were we checking to be the main interactable?
+	if(TimerCheckHandle.IsValid())
+		//We are the main interactable, we don't need to still checking.
+		GetWorld()->GetTimerManager().ClearTimer(TimerCheckHandle);
 
+	//Turn on widget
 	if (InteractableWidgetComponent)
-		InteractableWidgetComponent->SetVisibility(true, true);
+		InteractableWidgetComponent->SetVisibility(true);
+}
+
+void UInteractableBoxComponent::SetAsSideInteractable(AGP3_MultiplayerCharacter* CharacterOverlapping)
+{
+	//Create delegate function to call each CheckRate seconds
+	FTimerDelegate TimerDelegate;
+	TimerDelegate.BindUFunction(this, FName("CheckValidInteractable"), CharacterOverlapping);
+	GetWorld()->GetTimerManager().SetTimer(TimerCheckHandle, TimerDelegate, CheckRateSeconds, true);
+
+	//Turn off widget
+	if (InteractableWidgetComponent)
+		InteractableWidgetComponent->SetVisibility(false);
+}
+
+void UInteractableBoxComponent::SetAsSleepInteractable()
+{
+	//Were we checking to be the main interactable?
+	if (TimerCheckHandle.IsValid())
+		//We are the main interactable, we don't need to still checking.
+		GetWorld()->GetTimerManager().ClearTimer(TimerCheckHandle);
+
+	//Turn off widget
+	if (InteractableWidgetComponent)
+		InteractableWidgetComponent->SetVisibility(false);
+}
+
+void UInteractableBoxComponent::CheckValidInteractable(AGP3_MultiplayerCharacter* CharacterToCheckOver)
+{
+	if (!CharacterToCheckOver->TryReplaceInteractable(InteractableOwner)) return;
+
+	//We are now the main interactable, yay!
+	SetAsMainInteractable();
+	//We are now the main interactable, we don't need to check every frame anymore
+	GetWorld()->GetTimerManager().ClearTimer(TimerCheckHandle);
+}
+
+void UInteractableBoxComponent::Handle_OnInteractableChanged(AGP3_MultiplayerCharacter* PlayerCharacter, TScriptInterface<IExecutable> NewInteractable)
+{
+	//If we are the new main interactable we already set ourself as the main one in CheckValidInteractable().
+	if (NewInteractable.GetObject() == GetOwner()) return;
+
+	//If we are not already checking to be the main interactable, we start now.
+	//Also means this was the main interactable before this delegate was called.
+	if (!GetWorld()->GetTimerManager().IsTimerActive(TimerCheckHandle))
+	{
+		//Begin to check if we can be the main interactable again.
+		SetAsSideInteractable(PlayerCharacter);
+	}
 }

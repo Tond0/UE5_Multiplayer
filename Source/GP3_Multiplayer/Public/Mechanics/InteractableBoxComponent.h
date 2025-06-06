@@ -29,9 +29,48 @@ protected:
     UWidgetComponent* InteractableWidgetComponent;
 
     FDelegateHandle HandleOnInteractableChanged;
+
 public:
     UFUNCTION(BlueprintCallable, meta = (BluprintProtected))
     const TScriptInterface<IExecutable> GetInteractable() const { return InteractableOwner; }
+    
+
+//Check Variable
+protected:
+    /// <summary>
+    /// Timer handle that will handle to check each CheckRate seconds, if the player is in range, if this is the closest interactable to him.
+    /// </summary>
+    FTimerHandle TimerCheckHandle;
+    /// <summary>
+    /// The rate which the boxcomponent will try to ask the main interactable to the player.
+    /// </summary>
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (BlueprintProtected))
+    float CheckRateSeconds = 0.1f;
+    /// <summary>
+    /// Will check if it can be the main interactable of the player
+    /// Called from the timer set in the OnOverlapBegin
+    /// </summary>
+    UFUNCTION()
+    void CheckValidInteractable(AGP3_MultiplayerCharacter* CharacterToCheckOver);
+
+    /// <summary>
+    /// Set the interactable as the one the player could be interacting with in this moment.
+    /// </summary>
+    UFUNCTION()
+    void SetAsMainInteractable();
+    /// <summary>
+    /// Set the interactable as the one the player can't interact with even if in range.
+    /// This will start checking whenever this interactable is the closer to the player.
+    /// </summary>
+    /// <param name="CharacterOverlapping">The player we want to check</param>
+    UFUNCTION()
+    void SetAsSideInteractable(AGP3_MultiplayerCharacter* CharacterOverlapping);
+    /// <summary>
+    /// Set the interactale as the one the player can't interact with because it's not in range.
+    /// </summary>
+    UFUNCTION()
+    void SetAsSleepInteractable();
+
 
 public:
     /// <summary>
@@ -52,6 +91,6 @@ protected:
     void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
     UFUNCTION()
-    void Handle_OnInteractableChanged(TScriptInterface<IExecutable> NewInteractable);
+    void Handle_OnInteractableChanged(AGP3_MultiplayerCharacter* PlayerCharacter, TScriptInterface<IExecutable> NewInteractable);
 
 };
