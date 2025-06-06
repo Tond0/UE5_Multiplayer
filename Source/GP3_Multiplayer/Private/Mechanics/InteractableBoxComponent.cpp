@@ -4,6 +4,8 @@
 #include "Mechanics/InteractableBoxComponent.h"
 #include "GP3_Multiplayer/GP3_MultiplayerCharacter.h"
 #include "Components/WidgetComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerState.h"
 #include "Mechanics/Interactable.h"
 
 UInteractableBoxComponent::UInteractableBoxComponent()
@@ -39,7 +41,7 @@ void UInteractableBoxComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedCo
 	//Try to set itself as main interactable for the player
 	if (CharacterOverlapping->TryReplaceInteractable(InteractableOwner))
 		//We are the interactable the player could interact with in this moment.
-		SetAsMainInteractable();
+		SetAsMainInteractable(CharacterOverlapping);
 	else
 		//We are the interactable the player can't interact with, but it's in range.
 		SetAsSideInteractable(CharacterOverlapping);
@@ -56,12 +58,12 @@ void UInteractableBoxComponent::OnOverlapEnd(UPrimitiveComponent* OverlappedComp
 	//Removes itself
 	CharacterOverlapping->RemoveInteractable(InteractableOwner);
 	//Player is not in range anymore.
-	SetAsSleepInteractable();
+	SetAsSleepInteractable(CharacterOverlapping);
 
 	CharacterOverlapping->UnbindToOnInteractableChanged(HandleOnInteractableChanged);
 }
 
-void UInteractableBoxComponent::SetAsMainInteractable()
+void UInteractableBoxComponent::SetAsMainInteractable(AGP3_MultiplayerCharacter* CharacterOverlapping)
 {
 	//Were we checking to be the main interactable?
 	if(TimerCheckHandle.IsValid())
@@ -69,7 +71,7 @@ void UInteractableBoxComponent::SetAsMainInteractable()
 		GetWorld()->GetTimerManager().ClearTimer(TimerCheckHandle);
 
 	//Turn on widget
-	if (InteractableWidgetComponent)
+	if (InteractableWidgetComponent && CharacterOverlapping->IsLocallyControlled())
 		InteractableWidgetComponent->SetVisibility(true);
 }
 
@@ -80,12 +82,12 @@ void UInteractableBoxComponent::SetAsSideInteractable(AGP3_MultiplayerCharacter*
 	TimerDelegate.BindUFunction(this, FName("CheckValidInteractable"), CharacterOverlapping);
 	GetWorld()->GetTimerManager().SetTimer(TimerCheckHandle, TimerDelegate, CheckRateSeconds, true);
 
-	//Turn off widget
-	if (InteractableWidgetComponent)
+	//Turn off widget, only on the local client
+	if (InteractableWidgetComponent  && CharacterOverlapping->IsLocallyControlled())
 		InteractableWidgetComponent->SetVisibility(false);
 }
 
-void UInteractableBoxComponent::SetAsSleepInteractable()
+void UInteractableBoxComponent::SetAsSleepInteractable(AGP3_MultiplayerCharacter* CharacterOverlapping)
 {
 	//Were we checking to be the main interactable?
 	if (TimerCheckHandle.IsValid())
@@ -93,7 +95,7 @@ void UInteractableBoxComponent::SetAsSleepInteractable()
 		GetWorld()->GetTimerManager().ClearTimer(TimerCheckHandle);
 
 	//Turn off widget
-	if (InteractableWidgetComponent)
+	if (InteractableWidgetComponent && CharacterOverlapping->IsLocallyControlled())
 		InteractableWidgetComponent->SetVisibility(false);
 }
 
@@ -102,7 +104,7 @@ void UInteractableBoxComponent::CheckValidInteractable(AGP3_MultiplayerCharacter
 	if (!CharacterToCheckOver->TryReplaceInteractable(InteractableOwner)) return;
 
 	//We are now the main interactable, yay!
-	SetAsMainInteractable();
+	SetAsMainInteractable(CharacterToCheckOver);
 	//We are now the main interactable, we don't need to check every frame anymore
 	GetWorld()->GetTimerManager().ClearTimer(TimerCheckHandle);
 }

@@ -93,7 +93,10 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	TScriptInterface<IExecutable> Interactable;
 	UFUNCTION(Server, Reliable)
-	void Server_Interact(const FInputActionValue& Value);
+	void Server_RequestInteract(const FInputActionValue& Value);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void NetMulticast_Interact();
 public:
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
 	const TScriptInterface<IExecutable> GetInteractable() const { return Interactable; }

@@ -57,7 +57,7 @@ protected:
     /// Set the interactable as the one the player could be interacting with in this moment.
     /// </summary>
     UFUNCTION()
-    void SetAsMainInteractable();
+    void SetAsMainInteractable(AGP3_MultiplayerCharacter* CharacterOverlapping);
     /// <summary>
     /// Set the interactable as the one the player can't interact with even if in range.
     /// This will start checking whenever this interactable is the closer to the player.
@@ -69,7 +69,7 @@ protected:
     /// Set the interactale as the one the player can't interact with because it's not in range.
     /// </summary>
     UFUNCTION()
-    void SetAsSleepInteractable();
+    void SetAsSleepInteractable(AGP3_MultiplayerCharacter* CharacterOverlapping);
 
 
 public:

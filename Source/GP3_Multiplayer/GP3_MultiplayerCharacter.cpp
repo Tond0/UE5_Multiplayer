@@ -127,7 +127,7 @@ void AGP3_MultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* Playe
 		EnhancedInputComponent->BindAction(PowerAction, ETriggerEvent::Completed, this, &AGP3_MultiplayerCharacter::Server_PerfomPower);
 
 		// Interaction
-		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Completed, this, &AGP3_MultiplayerCharacter::Server_Interact);
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Completed, this, &AGP3_MultiplayerCharacter::Server_RequestInteract);
 	}
 	else
 	{
@@ -135,12 +135,17 @@ void AGP3_MultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* Playe
 	}
 }
 
-void AGP3_MultiplayerCharacter::Server_Interact_Implementation(const FInputActionValue& Value)
+void AGP3_MultiplayerCharacter::Server_RequestInteract_Implementation(const FInputActionValue& Value)
 {
 	if (!HasAuthority()) return;
 
 	if (!Interactable.GetObject()) return;
 
+	NetMulticast_Interact();
+}
+
+void AGP3_MultiplayerCharacter::NetMulticast_Interact_Implementation()
+{
 	//Lol il nome della funzione per colpa di unreal è diventato Execute_Execute
 	Interactable->Execute_Execute(Interactable.GetObject());
 }
