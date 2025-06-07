@@ -184,7 +184,7 @@ void AGP3_MultiplayerCharacter::RemoveInteractable(TScriptInterface<IInteractabl
 	if (InteractableToRemove.GetObject() != Interactable.GetObject()) return;
 
 	Interactable = nullptr;
-	//FIXME: Old method, now every box component, but the main one, are checking every X seconds.
+	//FIXME: Old method, now every box component, but the main active one, are checking every X seconds if they're the closer to the player.
 	////We start by setting it to nullptr
 	//Interactable = nullptr;
 

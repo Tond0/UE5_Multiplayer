@@ -64,6 +64,7 @@ void USizeChangerComponent::ChangePowerState_Implementation(EPowerState NextPowe
 	}
 
 	CurrentPowerState = NextPowerState;
+	OnSizeChanged.Broadcast(CurrentPowerState);
 }
 
 void USizeChangerComponent::ApplyNewSettings(AActor* ActorOwner, FStatePowerSettings SettingsToApply)
@@ -95,6 +96,7 @@ void USizeChangerComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(USizeChangerComponent, CurrentPowerState);
+	DOREPLIFETIME(USizeChangerComponent, TargetPowerState);
 }
 
 

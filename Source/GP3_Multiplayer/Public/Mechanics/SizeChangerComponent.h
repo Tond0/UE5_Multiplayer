@@ -46,6 +46,8 @@ public:
 	float MaxWalkSpeed;
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSizeChanged, EPowerState, NewSizeState);
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class GP3_MULTIPLAYER_API USizeChangerComponent : public UActorComponent
 {
@@ -74,6 +76,15 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BlueprintProtected))
 	float StandardJumpZVelocity;
 
+//Delegate
+//FIXME: Grazie ad Unreal sono obbligato a lasciare questo delegate public se voglio che possa essere riprodotto in BP (Dynamic).
+//		 Questo perché creare una funzione per il binding come ho fatto con il resto dei delegate è stupidamente complesso 
+//		 e non ho trovato online nessuna risorsa al riguardo, pure chatgpt mi ha dato forfeit. Quando avrò più tempo ci darò occhio.
+public:
+	UPROPERTY(BlueprintAssignable)
+	FOnSizeChanged OnSizeChanged;
+
+
 protected:
 	/// <summary>
 	/// In which state is this character in?
@@ -85,13 +96,13 @@ public:
 	/// <summary>
 	/// When the action will be triggered will this character try to Grow or Shrink?
 	/// </summary>
-	UPROPERTY(BlueprintReadOnly, meta = (BlueprintProtected))
+	UPROPERTY(Replicated, BlueprintReadOnly, meta = (BlueprintProtected))
 	EPowerState TargetPowerState;
 
 //Getters
 public:
 	UFUNCTION(BlueprintCallable)
-	const EPowerState GetPowerState() const { return CurrentPowerState; }
+	const EPowerState GetCurrentPowerState() const { return CurrentPowerState; }
 
 protected:
 	/// <summary>

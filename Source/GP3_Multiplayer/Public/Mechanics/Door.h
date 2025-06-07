@@ -31,7 +31,7 @@ protected:
 	FTimeline DoorTimeline;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (BlueprintProtected))
-	UCurveFloat* CurveTimeline;
+	UCurveFloat* OpeningCurveTimeline;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (BlueprintProtected))
 	float AnimationDuration;

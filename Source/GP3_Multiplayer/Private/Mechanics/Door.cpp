@@ -39,7 +39,7 @@ void ADoor::BeginPlay()
 	FinishedEvent.BindUFunction(this, FName("Handle_OnTimelineFinished"));
 
 	DoorTimeline.SetPlayRate(1 / AnimationDuration);
-	DoorTimeline.AddInterpFloat(CurveTimeline, ProgressUpdate);
+	DoorTimeline.AddInterpFloat(OpeningCurveTimeline, ProgressUpdate);
 	DoorTimeline.SetTimelineFinishedFunc(FinishedEvent);
 }
 
@@ -51,11 +51,9 @@ void ADoor::Handle_TimelineUpdate_Implementation(float Alpha)
 
 void ADoor::Handle_OnTimelineFinished_Implementation()
 {
-	FVector FinalLocation = IsDoorOpen ? StartRelativeLocation : TargetRelativeLocation;
+	FVector FinalLocation = IsDoorOpen ? TargetRelativeLocation : StartRelativeLocation;
 	
 	MeshContainerSceneComponent->SetRelativeLocation(FinalLocation);
-
-	IsDoorOpen = !IsDoorOpen;
 }
 
 // Called every frame
@@ -70,10 +68,14 @@ void ADoor::Execute()
 {
 	Super::Execute();
 
+	if (DoorTimeline.IsPlaying())
+		DoorTimeline.Stop();
+
 	//Start door's animation
 	if(IsDoorOpen)
 		DoorTimeline.Reverse();
 	else
 		DoorTimeline.Play();
 
+	IsDoorOpen = !IsDoorOpen;
 }
