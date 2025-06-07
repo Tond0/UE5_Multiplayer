@@ -109,7 +109,7 @@ void UInteractableBoxComponent::CheckValidInteractable(AGP3_MultiplayerCharacter
 	GetWorld()->GetTimerManager().ClearTimer(TimerCheckHandle);
 }
 
-void UInteractableBoxComponent::Handle_OnInteractableChanged(AGP3_MultiplayerCharacter* PlayerCharacter, TScriptInterface<IExecutable> NewInteractable)
+void UInteractableBoxComponent::Handle_OnInteractableChanged(AGP3_MultiplayerCharacter* PlayerCharacter, TScriptInterface<IInteractable> NewInteractable)
 {
 	//If we are the new main interactable we already set ourself as the main one in CheckValidInteractable().
 	if (NewInteractable.GetObject() == GetOwner()) return;

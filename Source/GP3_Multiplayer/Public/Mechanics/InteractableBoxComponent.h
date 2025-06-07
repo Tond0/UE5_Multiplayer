@@ -23,7 +23,7 @@ public:
 
 protected:
     UPROPERTY(BlueprintReadOnly, meta = (BlueprintProtected))
-    TScriptInterface<IExecutable> InteractableOwner = nullptr;
+    TScriptInterface<IInteractable> InteractableOwner = nullptr;
 
     UPROPERTY(BlueprintReadOnly, meta = (BlueprintProtected))
     UWidgetComponent* InteractableWidgetComponent;
@@ -32,7 +32,7 @@ protected:
 
 public:
     UFUNCTION(BlueprintCallable, meta = (BluprintProtected))
-    const TScriptInterface<IExecutable> GetInteractable() const { return InteractableOwner; }
+    const TScriptInterface<IInteractable> GetInteractable() const { return InteractableOwner; }
     
 
 //Check Variable
@@ -80,7 +80,7 @@ public:
     /// </summary>
     UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
     void ExecuteInteract();
-    void ExecuteInteract_Implementation() { InteractableOwner->Execute(); }
+    void ExecuteInteract_Implementation() { InteractableOwner->Execute_Interact(InteractableOwner.GetObject()); }
 
 protected:
     virtual void BeginPlay() override;
@@ -91,6 +91,6 @@ protected:
     void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
     UFUNCTION()
-    void Handle_OnInteractableChanged(AGP3_MultiplayerCharacter* PlayerCharacter, TScriptInterface<IExecutable> NewInteractable);
+    void Handle_OnInteractableChanged(AGP3_MultiplayerCharacter* PlayerCharacter, TScriptInterface<IInteractable> NewInteractable);
 
 };

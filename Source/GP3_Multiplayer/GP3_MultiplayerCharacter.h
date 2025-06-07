@@ -22,7 +22,7 @@ struct FInputActionValue;
 /// <param name=""></param>
 DECLARE_DELEGATE(FOnPowerActionPerformed);
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnInteractableChanged, AGP3_MultiplayerCharacter*, TScriptInterface<IExecutable>);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnInteractableChanged, AGP3_MultiplayerCharacter*, TScriptInterface<IInteractable>);
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -91,7 +91,7 @@ protected:
 	/// Self assigned from the interactable box if player is close to it.
 	/// </summary>
 	UPROPERTY(BlueprintReadOnly)
-	TScriptInterface<IExecutable> Interactable;
+	TScriptInterface<IInteractable> Interactable;
 	UFUNCTION(Server, Reliable)
 	void Server_RequestInteract(const FInputActionValue& Value);
 
@@ -99,13 +99,13 @@ protected:
 	void NetMulticast_Interact();
 public:
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
-	const TScriptInterface<IExecutable> GetInteractable() const { return Interactable; }
+	const TScriptInterface<IInteractable> GetInteractable() const { return Interactable; }
 
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
-	bool TryReplaceInteractable(TScriptInterface<IExecutable> NewInteractable);
+	bool TryReplaceInteractable(TScriptInterface<IInteractable> NewInteractable);
 
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
-	void RemoveInteractable(TScriptInterface<IExecutable> InteractableToRemove);
+	void RemoveInteractable(TScriptInterface<IInteractable> InteractableToRemove);
 
 
 protected:

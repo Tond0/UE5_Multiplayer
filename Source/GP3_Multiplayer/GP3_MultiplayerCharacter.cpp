@@ -147,10 +147,10 @@ void AGP3_MultiplayerCharacter::Server_RequestInteract_Implementation(const FInp
 void AGP3_MultiplayerCharacter::NetMulticast_Interact_Implementation()
 {
 	//Lol il nome della funzione per colpa di unreal è diventato Execute_Execute
-	Interactable->Execute_Execute(Interactable.GetObject());
+	Interactable->Execute_Interact(Interactable.GetObject());
 }
 
-bool AGP3_MultiplayerCharacter::TryReplaceInteractable(TScriptInterface<IExecutable> NewInteractable)
+bool AGP3_MultiplayerCharacter::TryReplaceInteractable(TScriptInterface<IInteractable> NewInteractable)
 {
 	if (!NewInteractable.GetObject()) return false;
 
@@ -179,7 +179,7 @@ bool AGP3_MultiplayerCharacter::TryReplaceInteractable(TScriptInterface<IExecuta
 	return false;
 }
 
-void AGP3_MultiplayerCharacter::RemoveInteractable(TScriptInterface<IExecutable> InteractableToRemove)
+void AGP3_MultiplayerCharacter::RemoveInteractable(TScriptInterface<IInteractable> InteractableToRemove)
 {
 	if (InteractableToRemove.GetObject() != Interactable.GetObject()) return;
 
