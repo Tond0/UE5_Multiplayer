@@ -69,9 +69,15 @@ protected:
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
 	void ApplyNewSettings(AActor* ActorOwner, FStatePowerSettings SettingsToApply);
 
+	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
+	bool CheckIfScalable(FVector SizeToCheck);
+
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BlueprintProtected))
 	class UCharacterMovementComponent* MovementComponent;
+
+	UPROPERTY(BlueprintReadOnly, meta = (BlueprintProtected))
+	class UCapsuleComponent* CapsuleComponent;
 
 	UPROPERTY(BlueprintReadOnly, meta = (BlueprintProtected))
 	float StandardJumpZVelocity;

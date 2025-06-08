@@ -4,6 +4,7 @@
 #include "Mechanics/SizeChangerComponent.h"
 #include "GP3_Multiplayer/GP3_MultiplayerCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -29,6 +30,7 @@ void USizeChangerComponent::BeginPlay()
 
 	//Let's remember the standard JumpZVelocity.
 	MovementComponent = Cast<UCharacterMovementComponent>(Character->GetMovementComponent());
+	CapsuleComponent = Character->GetCapsuleComponent();
 
 	//Save standard settings
 	StandardPowerSettings = FStatePowerSettings(
@@ -48,13 +50,19 @@ void USizeChangerComponent::ChangePowerState_Implementation(EPowerState NextPowe
 {
 	AActor* ActorOwner = GetOwner();
 
+
 	switch (NextPowerState)
 	{
 	case EPowerState::Standard:
+		//Can we come back to normal?
+		//FIXME: Kinda useless to check if u are coming from the big size but its ok.
+		if (!CheckIfScalable(StandardPowerSettings.Size)) return;
 		ApplyNewSettings(ActorOwner, StandardPowerSettings);
 		break;
 
 	case EPowerState::Big:
+		//Can we grow?
+		if (!CheckIfScalable(BigPowerSettings.Size)) return;
 		ApplyNewSettings(ActorOwner, BigPowerSettings);
 		break;
 
@@ -70,9 +78,32 @@ void USizeChangerComponent::ChangePowerState_Implementation(EPowerState NextPowe
 void USizeChangerComponent::ApplyNewSettings(AActor* ActorOwner, FStatePowerSettings SettingsToApply)
 {
 	ActorOwner->SetActorScale3D(SettingsToApply.Size);
+
 	MovementComponent->JumpZVelocity = SettingsToApply.JumpZVelocity;
 	MovementComponent->GravityScale = SettingsToApply.GravityScale;
 	MovementComponent->MaxWalkSpeed = SettingsToApply.MaxWalkSpeed;
+}
+
+bool USizeChangerComponent::CheckIfScalable(FVector SizeToCheck)
+{
+	FHitResult OutHit = FHitResult();
+
+	FVector SweepStart = GetOwner()->GetActorLocation() + FVector(0,0,100);
+	//Sul posto
+	FVector SweepEnd = SweepStart;
+
+	FQuat Rotation = FQuat(GetOwner()->GetActorRotation());
+
+	float CapsuleShapeRadius = CapsuleComponent->GetUnscaledCapsuleRadius() * SizeToCheck.X;
+	float CapsuleShapeHalfHeight = CapsuleComponent->GetUnscaledCapsuleHalfHeight() * SizeToCheck.Z / 2;
+	FCollisionShape CapsuleShape = FCollisionShape::MakeCapsule(CapsuleShapeRadius, CapsuleShapeHalfHeight);
+
+	FCollisionQueryParams QueryParams = FCollisionQueryParams();
+	QueryParams.AddIgnoredActor(GetOwner());
+
+	DrawDebugCapsule(GetWorld(), SweepStart, CapsuleShapeHalfHeight, CapsuleShapeRadius, Rotation, FColor::Green, false, 2, 0, 2);
+	//Se collidiamo con qualcosa allora non possiamo ingrandirci!
+	return !GetWorld()->SweepSingleByChannel(OutHit, SweepStart, SweepEnd, Rotation, ECollisionChannel::ECC_Camera, CapsuleShape, QueryParams);
 }
 
 void USizeChangerComponent::TogglePowerState()
@@ -98,7 +129,6 @@ void USizeChangerComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(USizeChangerComponent, CurrentPowerState);
 	DOREPLIFETIME(USizeChangerComponent, TargetPowerState);
 }
-
 
 // Called every frame
 void USizeChangerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
