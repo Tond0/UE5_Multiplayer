@@ -17,7 +17,7 @@ class GP3_MULTIPLAYER_API AExecutable : public AActor, public IInteractable
 	
 //Can Invoke
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BlueprintProtected))
+	UPROPERTY(Replicated, BlueprintReadOnly, meta = (BlueprintProtected))
 	bool CanExecute = true;
 
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
@@ -45,7 +45,7 @@ protected:
 	void ExecuteOnTargets();
 
 public:
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
 	virtual void Execute();
 
 public:	
@@ -59,6 +59,8 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 
 };

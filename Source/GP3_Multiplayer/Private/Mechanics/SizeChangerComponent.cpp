@@ -54,9 +54,8 @@ void USizeChangerComponent::ChangePowerState_Implementation(EPowerState NextPowe
 	switch (NextPowerState)
 	{
 	case EPowerState::Standard:
-		//Can we come back to normal?
-		//FIXME: Kinda useless to check if u are coming from the big size but its ok.
-		if (!CheckIfScalable(StandardPowerSettings.Size)) return;
+		//Can we come back to normal if we were small?
+		if (TargetPowerState == EPowerState::Small && !CheckIfScalable(StandardPowerSettings.Size)) return;
 		ApplyNewSettings(ActorOwner, StandardPowerSettings);
 		break;
 

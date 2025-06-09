@@ -51,8 +51,11 @@ protected:
 	void Handle_OnTimelineFinished();
 
 protected:
-	UPROPERTY(BlueprintReadOnly, meta = (BlueprintProtected))
+	UPROPERTY(ReplicatedUsing = OnRep_IsDoorOpen, BlueprintReadOnly, meta = (BlueprintProtected))
 	bool IsDoorOpen;
+
+	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
+	void OnRep_IsDoorOpen();
 public:
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
 	const bool GetIsDoorOpen() const { return IsDoorOpen; }
@@ -69,7 +72,8 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void Execute() override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 
+	void Execute_Implementation() override;
 };

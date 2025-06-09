@@ -90,13 +90,11 @@ protected:
 	/// The interactable we can interact with.
 	/// Self assigned from the interactable box if player is close to it.
 	/// </summary>
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(Replicated, BlueprintReadOnly)
 	TScriptInterface<IInteractable> Interactable;
 	UFUNCTION(Server, Reliable)
-	void Server_RequestInteract(const FInputActionValue& Value);
+	void Server_Interact(const FInputActionValue& Value);
 
-	UFUNCTION(NetMulticast, Reliable)
-	void NetMulticast_Interact();
 public:
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
 	const TScriptInterface<IInteractable> GetInteractable() const { return Interactable; }
@@ -129,6 +127,8 @@ public:
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifeTimeProps) const override;
 	
 	// To add mapping context
 	virtual void BeginPlay();

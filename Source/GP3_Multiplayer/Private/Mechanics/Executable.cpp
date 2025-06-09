@@ -2,6 +2,7 @@
 
 
 #include "Mechanics/Executable.h"
+#include "Net/UnrealNetwork.h"
 #include "Mechanics/InteractableBoxComponent.h"
 
 // Sets default values
@@ -10,6 +11,7 @@ AExecutable::AExecutable()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	SetReplicates(true);
 }
 
 // Called when the game starts or when spawned
@@ -26,9 +28,15 @@ void AExecutable::Tick(float DeltaTime)
 
 }
 
+void AExecutable::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	DOREPLIFETIME(AExecutable, CanExecute);
+}
+
 void AExecutable::DisableExecutable()
 {
-	CanExecute = false;
+	if(HasAuthority())
+		CanExecute = false;
 
 	//Disable any interaction we might have with the player.
 	if (UInteractableBoxComponent* InteractableBox = GetComponentByClass<UInteractableBoxComponent>())
@@ -38,11 +46,13 @@ void AExecutable::DisableExecutable()
 	}
 }
 
-void AExecutable::Execute()
+void AExecutable::Execute_Implementation()
 {
 	if (!CanExecute) return;
 
-	ExecuteOnTargets();
+	//Only the server will start the execution, even if this method is NetMulticast.
+	//if(HasAuthority())
+		ExecuteOnTargets();
 
 	if (ExecuteOnce)
 		DisableExecutable();
@@ -58,6 +68,6 @@ void AExecutable::ExecuteOnTargets()
 
 void AExecutable::Interact_Implementation()
 {
-	Execute();
+ 	Execute();
 }
 

@@ -3,6 +3,7 @@
 #include "Mechanics/Door.h"
 #include "Components/TimelineComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ADoor::ADoor()
@@ -19,6 +20,9 @@ ADoor::ADoor()
 
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	MeshComponent->SetupAttachment(MeshContainerSceneComponent);
+
+	//Don't need this thanks to the OnRep_IsDoorOpen
+	//SetReplicateMovement(true);
 }
 
 // Called when the game starts or when spawned
@@ -64,18 +68,33 @@ void ADoor::Tick(float DeltaTime)
 	DoorTimeline.TickTimeline(DeltaTime);
 }
 
-void ADoor::Execute()
+void ADoor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	Super::Execute();
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	if (DoorTimeline.IsPlaying())
-		DoorTimeline.Stop();
+	DOREPLIFETIME(ADoor, IsDoorOpen);
+}
+
+void ADoor::OnRep_IsDoorOpen()
+{
+	if (IsDoorOpen)
+		DoorTimeline.Play();
+	else
+		DoorTimeline.Reverse();
+}
+
+void ADoor::Execute_Implementation()
+{
+	Super::Execute_Implementation();
+
+	if (!HasAuthority()) return;
 
 	//Start door's animation
-	if(IsDoorOpen)
+	if (IsDoorOpen)
 		DoorTimeline.Reverse();
 	else
 		DoorTimeline.Play();
+
 
 	IsDoorOpen = !IsDoorOpen;
 }

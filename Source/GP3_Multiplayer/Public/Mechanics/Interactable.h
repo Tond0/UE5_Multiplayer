@@ -20,7 +20,6 @@ class GP3_MULTIPLAYER_API IInteractable
 {
     GENERATED_BODY()
 
-
 public:
     // Puoi chiamare questa funzione in C++ o Blueprints
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
