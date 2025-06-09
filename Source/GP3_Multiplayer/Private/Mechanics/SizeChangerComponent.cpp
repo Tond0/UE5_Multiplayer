@@ -87,14 +87,14 @@ bool USizeChangerComponent::CheckIfScalable(FVector SizeToCheck)
 {
 	FHitResult OutHit = FHitResult();
 
-	FVector SweepStart = GetOwner()->GetActorLocation() + FVector(0,0,100);
+	FVector SweepStart = GetOwner()->GetActorLocation() + FVector(0,0,60);
 	//Sul posto
 	FVector SweepEnd = SweepStart;
 
 	FQuat Rotation = FQuat(GetOwner()->GetActorRotation());
 
 	float CapsuleShapeRadius = CapsuleComponent->GetUnscaledCapsuleRadius() * SizeToCheck.X;
-	float CapsuleShapeHalfHeight = CapsuleComponent->GetUnscaledCapsuleHalfHeight() * SizeToCheck.Z / 2;
+	float CapsuleShapeHalfHeight = CapsuleComponent->GetUnscaledCapsuleHalfHeight() * SizeToCheck.Z;
 	FCollisionShape CapsuleShape = FCollisionShape::MakeCapsule(CapsuleShapeRadius, CapsuleShapeHalfHeight);
 
 	FCollisionQueryParams QueryParams = FCollisionQueryParams();
