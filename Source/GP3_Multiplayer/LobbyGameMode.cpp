@@ -24,7 +24,7 @@ void ALobbyGameMode::StartGame()
 	}
 
 	bUseSeamlessTravel = true;
-	World->ServerTravel("/Game/ThirdPerson/Maps/Level1?listen");
+	World->ServerTravel("/Game/ThirdPerson/Maps/Levels/Level1?listen");
 }
 
 void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
@@ -33,9 +33,9 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 
 	NumberOfPlayers++;
 
-	if (NumberOfPlayers >= 3)
+	if (NumberOfPlayers >= 2)
 	{
-		GetWorldTimerManager().SetTimer(GameStartTimer, this, &ALobbyGameMode::StartGame, 10);
+		GetWorldTimerManager().SetTimer(GameStartTimer, this, &ALobbyGameMode::StartGame, 3);
 	}
 }
 

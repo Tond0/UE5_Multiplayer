@@ -76,6 +76,10 @@ void USizeChangerComponent::ChangePowerState_Implementation(EPowerState NextPowe
 
 void USizeChangerComponent::ApplyNewSettings(AActor* ActorOwner, FStatePowerSettings SettingsToApply)
 {
+	//If we're growing...
+	if (SettingsToApply.Size.Length() > ActorOwner->GetActorScale3D().Length())
+		//We move the player upwards for a short distance to avoid clipping with the floor.
+		ActorOwner->SetActorLocation(ActorOwner->GetActorLocation() + FVector(0, 0, 20));
 	ActorOwner->SetActorScale3D(SettingsToApply.Size);
 
 	MovementComponent->JumpZVelocity = SettingsToApply.JumpZVelocity;

@@ -22,6 +22,8 @@ void AGP3_MultiplayerGameMode::HandleStartingNewPlayer_Implementation(APlayerCon
 	{
 		NewProjectCharacter->SetTargetPowerState(EPowerState::Big);
 	}
+
+	OnPlayerStart.Broadcast(NewProjectCharacter);
 }
 
 AGP3_MultiplayerGameMode::AGP3_MultiplayerGameMode()
