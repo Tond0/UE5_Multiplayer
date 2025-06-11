@@ -8,19 +8,21 @@
 
 void AGP3_MultiplayerGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
 {
+	if (!HasAuthority()) return;
+
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 
 	ACharacter* NewCharacter = NewPlayer->GetCharacter();
 	AGP3_MultiplayerCharacter* NewProjectCharacter = Cast<AGP3_MultiplayerCharacter>(NewCharacter);
-	const USizeChangerComponent* SizeChangerComponent =	NewProjectCharacter->GetSizeChangerComponent();
+	USizeChangerComponent* SizeChangerComponent = NewProjectCharacter->GetSizeChangerComponent();
 
 	if (NewPlayer == UGameplayStatics::GetPlayerController(GetWorld(), 0))
 	{
-		NewProjectCharacter->SetTargetPowerState(EPowerState::Small);
+		SizeChangerComponent->TargetPowerState = EPowerState::Small;
 	}
 	else if(NewPlayer == UGameplayStatics::GetPlayerController(GetWorld(), 1))
 	{
-		NewProjectCharacter->SetTargetPowerState(EPowerState::Big);
+		SizeChangerComponent->TargetPowerState = EPowerState::Big;
 	}
 
 	OnPlayerStart.Broadcast(NewProjectCharacter);

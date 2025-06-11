@@ -69,7 +69,6 @@ class AGP3_MultiplayerCharacter : public ACharacter
 public:
 	AGP3_MultiplayerCharacter();
 
-
 //Delegates
 //PowerAction
 protected:
@@ -118,11 +117,8 @@ protected:
 	
 public:
 	UFUNCTION(BlueprintCallable)
-	const USizeChangerComponent* GetSizeChangerComponent() const { return SizeComponent; }
+	USizeChangerComponent* GetSizeChangerComponent() const { return SizeComponent; }
 
-	//FIXME: Multicast o Client?
-	UFUNCTION(Server, Reliable, BlueprintCallable)
-	void SetTargetPowerState(EPowerState NewTargetPowerState);
 
 protected:
 	// APawn interface

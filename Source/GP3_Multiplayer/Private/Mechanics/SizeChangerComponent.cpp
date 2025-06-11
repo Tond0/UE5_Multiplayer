@@ -19,16 +19,13 @@ USizeChangerComponent::USizeChangerComponent()
 }
 
 // Called when the game starts
-void USizeChangerComponent::BeginPlay()
+void USizeChangerComponent::SetUp_Implementation(AGP3_MultiplayerCharacter* Character)
 {
-	Super::BeginPlay();
+	//We don't need clients to bind to the delegate, they will change size on the replication of CurrentState.
+	if (Character->HasAuthority()) 
+		//Bind to action delegate.
+		Character->BindToOnPowerActionPerformed(this, "TogglePowerState");
 
-	//Bind to action delegate.
-	AActor* Owner = GetOwner();
-	AGP3_MultiplayerCharacter* Character = Cast<AGP3_MultiplayerCharacter>(Owner);
-	Character->BindToOnPowerActionPerformed(this, "TogglePowerState");
-
-	//Let's remember the standard JumpZVelocity.
 	MovementComponent = Cast<UCharacterMovementComponent>(Character->GetMovementComponent());
 	CapsuleComponent = Character->GetCapsuleComponent();
 
@@ -39,17 +36,13 @@ void USizeChangerComponent::BeginPlay()
 		MovementComponent->GravityScale,
 		MovementComponent->MaxWalkSpeed
 	);
-
-	//This should never happen...
-	if (TargetPowerState == EPowerState::Standard)
-		//... but if this happen a log error is shown.
-		UE_LOG(LogTemp, Error, TEXT("TargetState is standard, something went wrong"));
 }
 
 void USizeChangerComponent::ChangePowerState_Implementation(EPowerState NextPowerState)
 {
 	AActor* ActorOwner = GetOwner();
 
+	if (!ActorOwner->HasAuthority()) return;
 
 	switch (NextPowerState)
 	{
@@ -82,6 +75,10 @@ void USizeChangerComponent::ApplyNewSettings(AActor* ActorOwner, FStatePowerSett
 		ActorOwner->SetActorLocation(ActorOwner->GetActorLocation() + FVector(0, 0, 20));
 	ActorOwner->SetActorScale3D(SettingsToApply.Size);
 
+	//If we were moving upwards then we stop the momentum, to avoid jumping with a force and then switch to a low gravity for higher jumps.
+	if (MovementComponent->Velocity.Z >= 0 && !MovementComponent->IsMovingOnGround())
+		MovementComponent->Velocity.Z = 0;
+
 	MovementComponent->JumpZVelocity = SettingsToApply.JumpZVelocity;
 	MovementComponent->GravityScale = SettingsToApply.GravityScale;
 	MovementComponent->MaxWalkSpeed = SettingsToApply.MaxWalkSpeed;
@@ -109,7 +106,7 @@ bool USizeChangerComponent::CheckIfScalable(FVector SizeToCheck)
 	return !GetWorld()->SweepSingleByChannel(OutHit, SweepStart, SweepEnd, Rotation, ECollisionChannel::ECC_Camera, CapsuleShape, QueryParams);
 }
 
-void USizeChangerComponent::TogglePowerState()
+void USizeChangerComponent::TogglePowerState_Implementation()
 {
 	//This is supposed to run on the server only.
 	if (!GetOwner()->HasAuthority()) return;
@@ -131,6 +128,27 @@ void USizeChangerComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(USizeChangerComponent, CurrentPowerState);
 	DOREPLIFETIME(USizeChangerComponent, TargetPowerState);
+}
+
+
+void USizeChangerComponent::OnRep_CurrentPowerState()
+{
+	AActor* ActorOwner = GetOwner();
+
+	switch (CurrentPowerState)
+	{
+	case EPowerState::Standard:
+		ApplyNewSettings(ActorOwner, StandardPowerSettings);
+		break;
+
+	case EPowerState::Big:
+		ApplyNewSettings(ActorOwner, BigPowerSettings);
+		break;
+
+	case EPowerState::Small:
+		ApplyNewSettings(ActorOwner, SmallPowerSettings);
+		break;
+	}
 }
 
 // Called every frame

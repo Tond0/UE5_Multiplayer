@@ -34,16 +34,16 @@ public:
 
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	FVector Size;
+	FVector Size = FVector(0);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	float JumpZVelocity;
+	float JumpZVelocity = 0;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	float GravityScale;
+	float GravityScale = 0;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	float MaxWalkSpeed;
+	float MaxWalkSpeed = 0;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSizeChanged, EPowerState, NewSizeState);
@@ -56,6 +56,9 @@ class GP3_MULTIPLAYER_API USizeChangerComponent : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	USizeChangerComponent();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void SetUp(AGP3_MultiplayerCharacter* Character);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (BlueprintProtected))
@@ -95,8 +98,11 @@ protected:
 	/// <summary>
 	/// In which state is this character in?
 	/// </summary>
-	UPROPERTY(Replicated, BlueprintReadOnly, meta = (BlueprintProtected))
-	EPowerState CurrentPowerState;
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentPowerState, BlueprintReadOnly, meta = (BlueprintProtected))
+	EPowerState CurrentPowerState = EPowerState::Standard;
+
+	UFUNCTION()
+	void OnRep_CurrentPowerState();
 
 public:
 	/// <summary>
@@ -114,20 +120,18 @@ protected:
 	/// <summary>
 	/// Change the power state and adjust the character with it.
 	/// </summary>
-	UFUNCTION(NetMulticast, Reliable, BlueprintCallable, meta = (BlueprintProtected))
+	UFUNCTION(Server, Reliable, BlueprintCallable, meta = (BlueprintProtected))
 	void ChangePowerState(EPowerState NextPowerState);
 
 	/// <summary>
 	/// Toggle from the standard state and the target state.
 	/// Called from power action delegate.
 	/// </summary>
-	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
+	UFUNCTION(Server, Reliable, BlueprintCallable, meta = (BlueprintProtected))
 	void TogglePowerState();
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	// Called when the game starts
-	virtual void BeginPlay() override;
 
 public:	
 	// Called every frame

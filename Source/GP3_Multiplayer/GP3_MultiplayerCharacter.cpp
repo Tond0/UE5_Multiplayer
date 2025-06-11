@@ -97,17 +97,11 @@ void AGP3_MultiplayerCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+
+	SizeComponent->SetUp(this);
 }
 
 //////////////////////////////////////////////////////////////////////////
-// Input
-
-void AGP3_MultiplayerCharacter::SetTargetPowerState_Implementation(EPowerState NewTargetPowerState)
-{
-	if (!HasAuthority()) return;
-
-	SizeComponent->TargetPowerState = NewTargetPowerState;
-}
 
 void AGP3_MultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -186,6 +180,7 @@ void AGP3_MultiplayerCharacter::RemoveInteractable(TScriptInterface<IInteractabl
 	if (InteractableToRemove.GetObject() != Interactable.GetObject()) return;
 
 	Interactable = nullptr;
+
 	//FIXME: Old method, now every box component, but the main active one, are checking every X seconds if they're the closer to the player.
 	////We start by setting it to nullptr
 	//Interactable = nullptr;
@@ -257,5 +252,8 @@ void AGP3_MultiplayerCharacter::Look(const FInputActionValue& Value)
 
 void AGP3_MultiplayerCharacter::Server_PerfomPower_Implementation(const FInputActionValue& Value)
 {
+	//This only works on the Server but we still for the authority, just in case.
+	if (!HasAuthority()) return;
+
 	OnPowerActionPerformed.ExecuteIfBound();
 }
