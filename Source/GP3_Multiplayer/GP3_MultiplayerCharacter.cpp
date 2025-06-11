@@ -73,6 +73,11 @@ void AGP3_MultiplayerCharacter::UnbindToOnInteractableChanged(FDelegateHandle Ha
 	OnInteractableChanged.Remove(Handle);
 }
 
+void AGP3_MultiplayerCharacter::OnRep_Interactable()
+{
+	OnInteractableChanged.Broadcast(this, Interactable);
+}
+
 bool AGP3_MultiplayerCharacter::BindToOnPowerActionPerformed(UObject* Object, FName FunctionName)
 {
 	//If this delegate is already bound, then you can't change the function is pointing to.
@@ -148,6 +153,8 @@ void AGP3_MultiplayerCharacter::Server_Interact_Implementation(const FInputActio
 
 bool AGP3_MultiplayerCharacter::TryReplaceInteractable(TScriptInterface<IInteractable> NewInteractable)
 {
+	//Only the server can make this check, even if this function can't be a ServerRPC. Interactable will be replicated.
+	if (!HasAuthority()) return false;
 	if (!NewInteractable.GetObject()) return false;
 
 	//If there's already an interactable...
@@ -177,6 +184,9 @@ bool AGP3_MultiplayerCharacter::TryReplaceInteractable(TScriptInterface<IInterac
 
 void AGP3_MultiplayerCharacter::RemoveInteractable(TScriptInterface<IInteractable> InteractableToRemove)
 {
+	//Only the server can make this check, even if this function can't be a ServerRPC. Interactable will be replicated.
+	if (!HasAuthority()) return;
+
 	if (InteractableToRemove.GetObject() != Interactable.GetObject()) return;
 
 	Interactable = nullptr;

@@ -89,8 +89,10 @@ protected:
 	/// The interactable we can interact with.
 	/// Self assigned from the interactable box if player is close to it.
 	/// </summary>
-	UPROPERTY(Replicated, BlueprintReadOnly)
+	UPROPERTY(ReplicatedUsing = OnRep_Interactable, BlueprintReadOnly)
 	TScriptInterface<IInteractable> Interactable;
+	UFUNCTION()
+	void OnRep_Interactable();
 	UFUNCTION(Server, Reliable)
 	void Server_Interact(const FInputActionValue& Value);
 
@@ -98,6 +100,11 @@ public:
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
 	const TScriptInterface<IInteractable> GetInteractable() const { return Interactable; }
 
+	/// <summary>
+	/// A box interactable will call this to see if its suitable to be the main interactable.
+	/// FIXME: Sarebbe stato bello averla come ServerRpc ma non si possono avere Interfacce come campi nelle RPC...
+	/// </summary>
+	/// <param name="NewInteractable"></param>
 	UFUNCTION(BlueprintCallable, meta = (BlueprintProtected))
 	bool TryReplaceInteractable(TScriptInterface<IInteractable> NewInteractable);
 

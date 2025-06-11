@@ -38,15 +38,22 @@ void UInteractableBoxComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedCo
 	AGP3_MultiplayerCharacter* CharacterOverlapping = Cast<AGP3_MultiplayerCharacter>(OtherActor);
 	if (!CharacterOverlapping) return;
 
+	//When Interactable will be replicated on the character, this box will change accordingly.
+	HandleOnInteractableChanged = CharacterOverlapping->BindToOnInteractableChanged(this, "Handle_OnInteractableChanged");
+
+	//All the checks will be handled by the server and the server only. Security baby
+	if (!GetOwner()->HasAuthority()) return;
+
 	//Try to set itself as main interactable for the player
-	if (CharacterOverlapping->TryReplaceInteractable(InteractableOwner))
+	CharacterOverlapping->TryReplaceInteractable(InteractableOwner);
+
+	//Are we the main one?
+	if (CharacterOverlapping->GetInteractable() == InteractableOwner)
 		//We are the interactable the player could interact with in this moment.
 		SetAsMainInteractable(CharacterOverlapping);
 	else
 		//We are the interactable the player can't interact with, but it's in range.
 		SetAsSideInteractable(CharacterOverlapping);
-	
-	HandleOnInteractableChanged = CharacterOverlapping->BindToOnInteractableChanged(this, "Handle_OnInteractableChanged");
 }
 
 void UInteractableBoxComponent::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -101,7 +108,8 @@ void UInteractableBoxComponent::SetAsSleepInteractable(AGP3_MultiplayerCharacter
 
 void UInteractableBoxComponent::CheckValidInteractable(AGP3_MultiplayerCharacter* CharacterToCheckOver)
 {
-	if (!CharacterToCheckOver->TryReplaceInteractable(InteractableOwner)) return;
+	CharacterToCheckOver->TryReplaceInteractable(InteractableOwner);
+	if (CharacterToCheckOver->GetInteractable() != InteractableOwner) return;
 
 	//We are now the main interactable, yay!
 	SetAsMainInteractable(CharacterToCheckOver);
@@ -111,8 +119,9 @@ void UInteractableBoxComponent::CheckValidInteractable(AGP3_MultiplayerCharacter
 
 void UInteractableBoxComponent::Handle_OnInteractableChanged(AGP3_MultiplayerCharacter* PlayerCharacter, TScriptInterface<IInteractable> NewInteractable)
 {
-	//If we are the new main interactable we already set ourself as the main one in CheckValidInteractable().
-	if (NewInteractable.GetObject() == GetOwner()) return;
+	//We are the main one!
+	if (NewInteractable.GetObject() == GetOwner())
+		SetAsMainInteractable(PlayerCharacter);
 
 	//If we are not already checking to be the main interactable, we start now.
 	//Also means this was the main interactable before this delegate was called.
